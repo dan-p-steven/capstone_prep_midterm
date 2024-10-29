@@ -1,6 +1,6 @@
 # Launch script
 import pandas as pd
-from src.data import clean_df 
+from src.data import clean_df, standardize_df 
 
 if __name__ == "__main__":
 
@@ -13,6 +13,9 @@ if __name__ == "__main__":
 
     # Clean df
     df_cleaned = clean_df(df)
+
+    # Standardize df
+    standardize_df(df_cleaned)
 
     print(df_cleaned.head())
 

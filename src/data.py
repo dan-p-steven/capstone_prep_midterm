@@ -37,9 +37,11 @@ the only way we could think of to impute time columns.
 Return the transformed columns.
 '''
 def _impute_by_constant_time(df: pd.DataFrame, cols):
-
     constant_time = pd.Timestamp('00:00:00')
     return df[cols].fillna(constant_time)
+
+def _impute_by_constant(df: pd.DataFrame, cols, constant):
+    return df[cols].fillna(constant)
 
 '''
 Transform the int/float values of Z_CARD_VALID into datetime. 
@@ -92,12 +94,21 @@ def clean_df(df: pd.DataFrame):
     # Impute columns based on a strategy, subject to experimentation to improve
     # performance.
     df[categorical_cols] = _impute_by_mode(df, categorical_cols)
-    df[time_cols] = _impute_by_constant_time(df, time_cols)
+    df[time_cols] = _impute_by_constant(df, time_cols, 
+                                        pd.Timestamp('00:00:00'))
     #df[numerical_cols] = _impute_by_mean(df, numerical_cols)
     
     ############################################################################
     return df
 
 
+def standardize_df(df: pd.DataFrame):
+    # Numerical cols: center around mean, divide by std
+    # Categorical cols: one-hot encode if category non-ordinal
+    #                   label encode if category ordinal
     
+    numerical_cols = df.select_dtypes(include=['float64', 'int64']).columns
+    categorical_cols = df.select_dtypes(include=['object']).columns
+
+    print(numerical_cols)
 
