@@ -116,6 +116,8 @@ def standardize_df(df: pd.DataFrame):
     # Get a list of the types of columns
     nume_cols, cat_cols, tim_cols = _num_cat_tim(df)
 
+    df = df.drop(columns=tim_cols)
+
 
     # Standardize the numerical columns by subtracting mean, dividing by std.
     for n in nume_cols:
@@ -126,7 +128,7 @@ def standardize_df(df: pd.DataFrame):
     # Ensure that the target atribute is mapped to 
     # low risk -> 0
     # high risk -> 1
-    df['CLASS'] = df['CLASS'].map({'no': 0, 'yes':1})
+    df['CLASS'] = df['CLASS'].map({'no': 0, 'yes': 1})
 
     # Get all categorical columns except CLASS (target col)
     onehot_cols = [c for c in cat_cols if c != 'CLASS']
