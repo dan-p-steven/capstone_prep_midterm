@@ -1,6 +1,7 @@
 # Launch script
 import pandas as pd
-from src.data import clean_df, standardize_df 
+from src.data import clean_df, standardize_df
+from imblearn.over_sampling import SMOTE
 
 if __name__ == "__main__":
 
@@ -11,11 +12,17 @@ if __name__ == "__main__":
     # Read from csv
     df = pd.read_csv(dataset_file_path, sep='\t')
 
-    # Clean df
-    df_cleaned = clean_df(df)
+    # Data Processing
+    df = clean_df(df)
+    df = standardize_df(df)
 
-    # Standardize df
-    standardize_df(df_cleaned)
+    print(df['CLASS'].isna().sum())
+    print(df.shape)
 
-    print(df_cleaned.head())
+    #print(risk_corr)
+
+
+
+    #print(df.head())
+    
 

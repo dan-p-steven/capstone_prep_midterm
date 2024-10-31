@@ -1,9 +1,10 @@
 '''
-Authors: Antra, Harman
+Authors: Antra, Harman, Daniel
 '''
 
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.impute import SimpleImputer
 
 
@@ -52,6 +53,14 @@ def _transform_z_card_valid(df: pd.DataFrame):
     df["Z_CARD_VALID"] = df["Z_CARD_VALID"].str.replace('.', '-', regex=False)
     return pd.to_datetime(df["Z_CARD_VALID"], format='%m-%Y', errors='coerce')
 
+def _num_cat_tim(df: pd.DataFrame):
+
+    num = df.select_dtypes(include=['float64', 'int64']).columns
+    cat = df.select_dtypes(include=['object']).columns
+    tim = df.select_dtypes(include=['datetime64[ns]']).columns
+
+    return (num, cat, tim)
+
 ############################### MAIN FUNCTIONS $$###############################
 
 '''
@@ -87,13 +96,11 @@ def clean_df(df: pd.DataFrame):
 
     # Find the numerical and categorical columns, we have a different imputation
     # strategy them.
-    numerical_cols = df.select_dtypes(include=['float64', 'int64']).columns
-    categorical_cols = df.select_dtypes(include=['object']).columns
-    time_cols = df.select_dtypes(include=['datetime64[ns]']).columns
+    numerical_cols, categorical_cols, time_cols = _num_cat_tim(df)
 
     # Impute columns based on a strategy, subject to experimentation to improve
     # performance.
-    df[categorical_cols] = _impute_by_mode(df, categorical_cols)
+    #df[categorical_cols] = _impute_by_mode(df, categorical_cols)
     df[time_cols] = _impute_by_constant(df, time_cols, 
                                         pd.Timestamp('00:00:00'))
     #df[numerical_cols] = _impute_by_mean(df, numerical_cols)
@@ -102,13 +109,34 @@ def clean_df(df: pd.DataFrame):
     return df
 
 
+
+
 def standardize_df(df: pd.DataFrame):
-    # Numerical cols: center around mean, divide by std
-    # Categorical cols: one-hot encode if category non-ordinal
-    #                   label encode if category ordinal
-    
-    numerical_cols = df.select_dtypes(include=['float64', 'int64']).columns
-    categorical_cols = df.select_dtypes(include=['object']).columns
 
-    print(numerical_cols)
+    # Get a list of the types of columns
+    nume_cols, cat_cols, tim_cols = _num_cat_tim(df)
 
+
+    # Standardize the numerical columns by subtracting mean, dividing by std.
+    for n in nume_cols:
+        mean = df[n].mean()
+        std = df[n].std()
+        df[n] = (df[n]-mean) / std
+
+    # Ensure that the target atribute is mapped to 
+    # low risk -> 0
+    # high risk -> 1
+    df['CLASS'] = df['CLASS'].map({'no': 0, 'yes':1})
+
+    # Get all categorical columns except CLASS (target col)
+    onehot_cols = [c for c in cat_cols if c != 'CLASS']
+
+    # Encode those categorical columns using one-hot
+    df = pd.get_dummies(df, columns=onehot_cols, drop_first=True)
+
+    # Multiple columns by 1, exclude time columns
+    for c in df.columns:
+        if not c in tim_cols:
+            df[c] = df[c] * 1
+
+    return df
